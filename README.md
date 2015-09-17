@@ -3,7 +3,10 @@ Chrylics - Chrome extension to view lyrics right next to the song's YouTube vide
 
 Instalation
 ==
-Simply drag the following crx file to chrome:
+Open a new tab and enter the following address in the URL: <br>
+<b>chrome://extensions/</b>
+
+Then simply drag the following crx file to chrome: <br>
 https://github.com/ofekp/chrylics/blob/master/Versions/V1.1/Chrylics.crx?raw=true
 
 Word of notice
