@@ -16,6 +16,7 @@
     "default_popup": "popup.html",
 	"default_title": "Show Lyrics"
   },
+
   "permissions": [
 	"http://www.azlyrics.com/",
     "activeTab",

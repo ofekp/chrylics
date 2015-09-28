@@ -41,7 +41,7 @@ function getCurrentTabUrl(callback) {
 		songTitle = getTuneInSong(tab);
 		// Lyrics will be shown by listener instead of the supplied callback
 	} else {
-		// NOP
+		showSupportedSites();
 	}    
   });
 
@@ -76,7 +76,10 @@ chrome.runtime.onMessage.addListener(function(request, sender) {
 		var startIndex = songTitle.indexOf(searchStr) + searchStr.length;
 		var endIndex = songTitle.indexOf("</", startIndex);
 		songTitle = songTitle.substring(startIndex, endIndex);
-		getLyricsWrapper(songTitle);
+		if (songTitle != "Live")
+			getLyricsWrapper(songTitle);
+		else
+			renderStatus("No current song information available");
 	}
 });
 
@@ -90,6 +93,14 @@ function getTuneInSong() {
     });
 }
 
+function showSupportedSites() {
+	renderStatus("No played song was found.");
+	var lyricsResult = document.getElementById('lyrics-result');
+	var htmlStr = "<br>Current supported sites:<br><img src=\"youtube.png\" title=\"Youtube\" width=100 height=100><img src=\"tunein.png\" title=\"TuneIn Radio\" width=100 height=100>"
+	lyricsResult.innerHTML = htmlStr;
+	lyricsResult.hidden = false;
+}
+
 function getLyricsWrapper(songTitle) {
 	// Put the image URL in Google search.
 	renderStatus('Searching for lyrics for ' + songTitle + "...");
@@ -97,12 +108,14 @@ function getLyricsWrapper(songTitle) {
 	getLyrics(songTitle, function(lyricsHtml) {
 		renderStatus(songTitle + "<br><br>");
 		var lyricsResult = document.getElementById('lyrics-result');
+		var azlyrics = document.getElementById('azlyrics');
 		// Explicitly set the width/height to minimize the number of reflows. For
 		// a single image, this does not matter, but if you're going to embed
 		// multiple external images in your page, then the absence of width/height
 		// attributes causes the popup to resize multiple times.
 		lyricsResult.innerHTML = lyricsHtml;
 		lyricsResult.hidden = false;
+		azlyrics.hidden = false;
 	
 	}, function(errorMessage) {
 		renderStatus('Cannot display lyrics. ' + errorMessage);
@@ -186,5 +199,19 @@ function renderStatus(statusText) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+
+	// For this to work the link must include the prefix 'http://'
+	var links = document.getElementsByTagName("a");
+	for (var i = 0; i < links.length; i++) {
+		(function () {
+			var ln = links[i];
+			var location = ln.href;
+			
+			ln.onclick = function () {
+				chrome.tabs.create({active: true, url: location});
+			};
+		})();
+	}
+	
 	getCurrentTabUrl(getLyricsWrapper);
 });

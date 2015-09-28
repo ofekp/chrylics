@@ -37,6 +37,7 @@
 //});
 
 function getCurrentSong_tunein(document_root) {
+	//alert(document_root.getElementById('mainContent').innerHTML);
 	return document_root.getElementById('mainContent').innerHTML;
 }
 

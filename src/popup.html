@@ -12,7 +12,7 @@
         font-family: "Segoe UI", "Lucida Grande", Tahoma, sans-serif;
         font-size: 15px;
 		text-align: center;
-		background-color: #E6F0EF; /*#EEE6F0*/
+		background-color: #DDDDEE; /*#E6F0EF*/ /*#EEE6F0*/
 		background-image: repeating-linear-gradient(-45deg, transparent, transparent 35px, rgba(255,255,255,.3) 35px, rgba(255,255,255,.3) 70px);
 		/*background: repeating-linear-gradient;*/
 		min-width: 300px;
@@ -29,6 +29,12 @@
         /*overflow: hidden;*/
         /*max-width: 1700px;*/
       }
+	  #azlyrics {
+		font-size: 11px;
+	  }
+	  #azlyricsimg {
+	    vertical-align: middle;
+	  }
     </style>
 
     <!--
@@ -40,6 +46,7 @@
     <script src="popup.js"></script>
   </head>
   <body>
+	<div id="azlyrics" hidden><a href="http://www.azlyrics.com"><img src="azlyrics.png" id="azlyricsimg" width=20 height=20></a> Lyrics taken from AZLyrics - <a href="http://www.azlyrics.com">www.azlyrics.com</a></div>
     <div id="status"></div>
     <div id="lyrics-result" hidden></div>
   </body>
