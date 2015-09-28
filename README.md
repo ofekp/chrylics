@@ -1,5 +1,8 @@
 # Chrylics
-Chrylics - Chrome extension to view lyrics right next to the song's YouTube video.
+Chrylics - Chrome extension to instantly view lyrics right next to the playing song.
+Currently available when listening to songs on:
+	1. YouTube.
+	2. TuneIn Radio.
 
 Instalation
 ==
@@ -11,6 +14,6 @@ https://github.com/ofekp/chrylics/blob/master/Versions/V1.1/Chrylics.crx?raw=tru
 
 Word of notice
 ==
-Currently using AZLyrics (www.azlyrics.com) and will not post the chrome extesion to the store until they approve this.
+Currently using AZLyrics (www.azlyrics.com).
 
 Enjoy.

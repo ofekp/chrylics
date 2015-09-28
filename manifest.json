@@ -19,6 +19,7 @@
   "permissions": [
 	"http://www.azlyrics.com/",
     "activeTab",
+	"tabs",
     "https://ajax.googleapis.com/"
   ]
 }
