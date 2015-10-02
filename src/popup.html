@@ -35,6 +35,9 @@
 	  #azlyricsimg {
 	    vertical-align: middle;
 	  }
+	  #searchString {
+		font-size: 11px;
+	  }
     </style>
 
     <!--
@@ -46,8 +49,11 @@
     <script src="popup.js"></script>
   </head>
   <body>
-	<div id="azlyrics" hidden><a href="http://www.azlyrics.com"><img src="azlyrics.png" id="azlyricsimg" width=20 height=20></a> Lyrics taken from AZLyrics - <a href="http://www.azlyrics.com">www.azlyrics.com</a></div>
     <div id="status"></div>
+	<div id="azlyrics" hidden><a href="http://www.azlyrics.com"><img src="azlyrics.png" id="azlyricsimg" width=20 height=20></a> Lyrics taken from AZLyrics - <a href="http://www.azlyrics.com">www.azlyrics.com</a></div>
+	<div id="bandName" hidden></div>
+	<div id="songName" hidden></div>
+	<div id="searchString" hidden></div>
     <div id="lyrics-result" hidden></div>
   </body>
 </html>

@@ -41,7 +41,7 @@ function getCurrentTabUrl(callback) {
 		songTitle = getTuneInSong(tab);
 		// Lyrics will be shown by listener instead of the supplied callback
 	} else {
-		showSupportedSites();
+		getSelectedText(showSupportedSites);
 	}    
   });
 
@@ -53,6 +53,23 @@ function getCurrentTabUrl(callback) {
   //   url = tabs[0].url;
   // });
   // alert(url); // Shows "undefined", because chrome.tabs.query is async.
+}
+
+var selectedText = "";
+function getSelectedText(errorFunc) {
+	chrome.tabs.executeScript( {
+	    code: "window.getSelection().toString();"
+	}, function(selection) {
+	    selectedText = selection[0];
+	    selectedText = selectedText.trim();
+	    if (selectedText.length == 0) {
+		    errorFunc();
+			return;
+	    }
+		songTitle = selectedText;
+		console.assert(typeof songTitle == 'string', 'Could not find a song name');
+		getLyricsWrapper(songTitle);
+	});
 }
 
 function getYouTubeSong(tab) {
@@ -105,15 +122,25 @@ function getLyricsWrapper(songTitle) {
 	// Put the image URL in Google search.
 	renderStatus('Searching for lyrics for ' + songTitle + "...");
 	
-	getLyrics(songTitle, function(lyricsHtml) {
-		renderStatus(songTitle + "<br><br>");
-		var lyricsResult = document.getElementById('lyrics-result');
+	getLyrics(songTitle, function(bandNameRes, songNameRes, lyricsRes) {
+		renderStatus("");
 		var azlyrics = document.getElementById('azlyrics');
+		var bandName = document.getElementById('bandName');
+		var songName = document.getElementById('songName');
+		var searchString = document.getElementById('searchString');
+		var lyricsResult = document.getElementById('lyrics-result');
 		// Explicitly set the width/height to minimize the number of reflows. For
 		// a single image, this does not matter, but if you're going to embed
 		// multiple external images in your page, then the absence of width/height
 		// attributes causes the popup to resize multiple times.
-		lyricsResult.innerHTML = lyricsHtml;
+		bandName.innerHTML = "<b>" + bandNameRes + "</b>";
+		songName.innerHTML = "<b>" + songNameRes + "</b>";
+		searchString.innerHTML = "Searched for: \"" + songTitle + "\"<br><br>";
+		lyricsResult.innerHTML = lyricsRes;
+		
+		bandName.hidden = false;
+		songName.hidden = false;
+		searchString.hidden = false;
 		lyricsResult.hidden = false;
 		azlyrics.hidden = false;
 	
@@ -172,10 +199,20 @@ function getLyrics(songTitle, callback, errorCallback) {
 	request.onreadystatechange = function() {
 	  if (request.readyState == 4 && request.status == 200)
 		var pageHtml = request.responseText;
-		var startIndex = pageHtml.indexOf("Sorry about that. -->") + "Sorry about that. -->".length;
-		var endIndex = pageHtml.indexOf("</div>", startIndex);
-		var lyricsHtml = pageHtml.substring(startIndex, endIndex);
-		callback(lyricsHtml);
+		var startIndex = pageHtml.indexOf("<div class=\"lyricsh\">") + "<div class=\"lyricsh\">".length;
+		startIndex = pageHtml.indexOf("<b>", startIndex) + "<b>".length;
+		var endIndex = pageHtml.indexOf("</b>", startIndex);
+		var bandName = pageHtml.substring(startIndex, endIndex); // Band name
+		
+		startIndex = pageHtml.indexOf("<b>", endIndex) + "<b>".length;
+		endIndex = pageHtml.indexOf("</b>", startIndex);
+		var songName = pageHtml.substring(startIndex, endIndex); // Song name
+		
+		startIndex = pageHtml.indexOf("Sorry about that. -->", startIndex) + "Sorry about that. -->".length;
+		endIndex = pageHtml.indexOf("</div>", startIndex);
+		var lyricsHtml = pageHtml.substring(startIndex, endIndex); // Lyrics
+		
+		callback(bandName, songName, lyricsHtml);
 	};
 	request.onerror = function() {
       errorCallback('Lyrics site error.');
@@ -195,7 +232,11 @@ function getLyrics(songTitle, callback, errorCallback) {
 }
 
 function renderStatus(statusText) {
-    document.getElementById('status').innerHTML = statusText;
+	var statusDom = document.getElementById('status');
+	if (statusText.length == 0)
+		statusDom.hidden = true;
+	else
+		statusDom.innerHTML = statusText;
 }
 
 document.addEventListener('DOMContentLoaded', function() {
