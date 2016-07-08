@@ -3,7 +3,7 @@
 
   "name": "Chrylics",
   "description": "This extension shows the lyrics for the currently played song in YouTube/TuneIn Radio",
-  "version": "1.3",
+  "version": "1.4",
   
   "icons": { 
     "16": "icon16.png",
