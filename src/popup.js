@@ -76,13 +76,21 @@ function getYouTubeSong(tab) {
 	// Current played YouTube song is presented in the tab's title
 	var title = tab.title;
     var songTitle = title.replace(" - YouTube", "");
-	var songTitle = songTitle.replace("YouTube", "");
-	var songTitle = songTitle.replace("Youtube", "");
-	var songTitle = songTitle.replace("youtube", "");
-	var songTitle = songTitle.replace("[Music Video]", "");
-	var songTitle = songTitle.replace("Music Video", "");
-	var songTitle = songTitle.replace("lyrics", "");
-	var songTitle = songTitle.replace("Lyrics", "");
+	songTitle = songTitle.replace("YouTube", "");
+	songTitle = songTitle.replace("Youtube", "");
+	songTitle = songTitle.replace("youtube", "");
+	songTitle = songTitle.replace("[Music Video]", "");
+	songTitle = songTitle.replace("Music Video", "");
+	songTitle = songTitle.replace("lyrics", "");
+	songTitle = songTitle.replace("Lyrics", "");
+	songTitle = songTitle.replace("(Official Video)", "");
+	songTitle = songTitle.replace("(OFFICIAL VIDEO)", "");
+	songTitle = songTitle.replace("(official video)", "");
+	songTitle = songTitle.replace("[Official Video]", "");
+	songTitle = songTitle.replace("[OFFICIAL VIDEO]", "");
+	songTitle = songTitle.replace("[official video]", "");
+	songTitle = songTitle.split("\"").join("");
+	songTitle = songTitle.trim();
 	return songTitle;
 }
 
@@ -149,50 +157,7 @@ function getLyricsWrapper(songTitle) {
 	});
 }
 
-/**
- * @param {string} searchTerm - Search term for Google Image search.
- * @param {function(string,number,number)} callback - Called when an image has
- *   been found. The callback gets the URL, width and height of the image.
- * @param {function(string)} errorCallback - Called when the image is not found.
- *   The callback gets a string that describes the failure reason.
- */
-function getLyrics(songTitle, callback, errorCallback) {
-  // Google image search - 100 searches per day.
-  // https://developers.google.com/image-search/
-  
-  var searchTerm = songTitle + " azlyrics";
-  var searchUrl = 'https://ajax.googleapis.com/ajax/services/search/web' +
-    '?v=1.0&q=' + encodeURIComponent(searchTerm);
-  var x = new XMLHttpRequest();
-  x.open('GET', searchUrl);
-  // The Google image search API responds with JSON, so let Chrome parse it.
-  x.responseType = 'json';
-  x.onload = function() {
-    // Parse and process the response from Google Image Search.
-    var response = x.response;
-    if (!response || !response.responseData || !response.responseData.results ||
-        response.responseData.results.length === 0)
-	{
-		errorCallback('No response from Google search!');
-		return;
-    }
-	var i;
-    var currUrl = "";
-	var lyricsUrl = "";
-	// Google always returns the results in chunks of 4 urls per GET query
-	var len = Math.min(4, response.responseData.results.length);
-	for (i = 0; i < len; i++) {
-		currUrl = response.responseData.results[i].url;
-		if (currUrl.indexOf("azlyrics.com") != -1) {
-			lyricsUrl = currUrl;
-			break;
-		}
-	}
-	if (lyricsUrl == "") {
-		errorCallback('Could not find lyrics for song.');
-		return;
-	}
-	  
+function parseLyricsFromLink(lyricsUrl, callback) {
 	var request = new XMLHttpRequest();
 	request.open("GET", lyricsUrl, true);
 	
@@ -218,17 +183,76 @@ function getLyrics(songTitle, callback, errorCallback) {
       errorCallback('Lyrics site error.');
 	}
 	request.send();
+}
+
+/**
+ * @param {string} searchTerm - Search term for Google Image search.
+ * @param {function(string,number,number)} callback - Called when an image has
+ *   been found. The callback gets the URL, width and height of the image.
+ * @param {function(string)} errorCallback - Called when the image is not found.
+ *   The callback gets a string that describes the failure reason.
+ */
+function getLyrics(songTitle, callback, errorCallback) {
+	// Create a custom search (www.azlyrics.com/*) in https://cse.google.com/cse/all
+	// Then enable Custom Search API in Google dev console - https://console.developers.google.com/apis/library?project=sounddrive-9909
+	// create (JavaScript) credentials in the console (with no limit on referrer)
+	// click "What credentials do I need"
+	// Choose app name "Chrylics"
+	// Copy the credentials, click Done, the key will be provided in the query parameter 'key'
+	// using the RESTful API: https://developers.google.com/custom-search/json-api/v1/using_rest
+	// cx is in the form of 'cx=00255077836266642015:u-scht7a-8i' and can be retrieved from 
+	// https://cse.google.com/cse/all when clicking on the "public link" belonging to the
+	// required custom search engine
+	var searchUrl = 'https://www.googleapis.com/customsearch/v1' +
+				  '?key=AIzaSyC9xocJg-YBYJA4nVaeQBNBJYjbIjL_V-E' + 
+				  '&cx=005791297897261852932:jvttnafuv6e' + 
+				  '&q=' + encodeURIComponent(songTitle) +
+				  '&num=1';
+				  
+	chrome.storage.local.get(searchUrl, function(items) {
+		if (Object.keys(items).length !== 0) {
+			var lyricsUrl = items[searchUrl];
+			parseLyricsFromLink(lyricsUrl, callback);
+			return;
+		}
 	
-    //var width = parseInt(firstResult.tbWidth);
-    //var height = parseInt(firstResult.tbHeight);
-    //console.assert(
-    //    typeof lyricsUrl == 'string',
-    //    'Unexpected respose from the Google Image Search API!');
-  };
-  x.onerror = function() {
-    errorCallback('Network error.');
-  };
-  x.send();
+		var x = new XMLHttpRequest();
+		x.open('GET', searchUrl);
+		x.onload = function() {
+		var response = x.response;
+		response = JSON.parse(response);
+		if (response === undefined || response.items === undefined || response.items.length === 0) {
+			errorCallback('No response from Google search!');
+			return;
+		}
+
+		// Get the first URL result
+		var lyricsUrl = response.items[0].link;
+		if (lyricsUrl === undefined) {
+			errorCallback('Could not find lyrics for song.');
+			return;
+		}
+
+		var cache_obj = {}
+		cache_obj[searchUrl] = lyricsUrl;
+		chrome.storage.local.set(cache_obj, function() {
+			  // Notify that we saved.
+			  console.log(cache_obj);
+		});
+		  
+		parseLyricsFromLink(lyricsUrl, callback);
+
+		//var width = parseInt(firstResult.tbWidth);
+		//var height = parseInt(firstResult.tbHeight);
+		//console.assert(
+		//    typeof lyricsUrl == 'string',
+		//    'Unexpected respose from the Google Image Search API!');
+		};
+		x.onerror = function() {
+			errorCallback('Network error.');
+		};
+		x.send();
+	});
 }
 
 function renderStatus(statusText) {
@@ -240,7 +264,6 @@ function renderStatus(statusText) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-
 	// For this to work the link must include the prefix 'http://'
 	var links = document.getElementsByTagName("a");
 	for (var i = 0; i < links.length; i++) {
