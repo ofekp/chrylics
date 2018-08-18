@@ -91,6 +91,14 @@ function getYouTubeSong(tab) {
 	songTitle = songTitle.replace("[official video]", "");
 	songTitle = songTitle.split("\"").join("");
 	songTitle = songTitle.trim();
+	// remove notifications number from the title
+	var notification_pattern = /(\(\d*\))(.*)/i;
+	var match = notification_pattern.exec(songTitle);
+	if (match != null) {
+	    songTitle = match[2]
+	}
+	songTitle = songTitle.trim();
+	console.log("song title [" + songTitle + "]")
 	return songTitle;
 }
 
@@ -162,7 +170,7 @@ function parseLyricsFromLink(lyricsUrl, callback) {
 	request.open("GET", lyricsUrl, true);
 	
 	request.onreadystatechange = function() {
-	  if (request.readyState == 4 && request.status == 200)
+	  if (request.readyState == 4 && request.status == 200) {
 		var pageHtml = request.responseText;
 		var startIndex = pageHtml.indexOf("<div class=\"lyricsh\">") + "<div class=\"lyricsh\">".length;
 		startIndex = pageHtml.indexOf("<b>", startIndex) + "<b>".length;
@@ -178,6 +186,7 @@ function parseLyricsFromLink(lyricsUrl, callback) {
 		var lyricsHtml = pageHtml.substring(startIndex, endIndex); // Lyrics
 		
 		callback(bandName, songName, lyricsHtml);
+	  }
 	};
 	request.onerror = function() {
       errorCallback('Lyrics site error.');
@@ -208,7 +217,9 @@ function getLyrics(songTitle, callback, errorCallback) {
 				  '&cx=005791297897261852932:jvttnafuv6e' + 
 				  '&q=' + encodeURIComponent(songTitle) +
 				  '&num=1';
-				  
+				 
+	console.log(searchUrl)
+	
 	chrome.storage.local.get(searchUrl, function(items) {
 		if (Object.keys(items).length !== 0) {
 			var lyricsUrl = items[searchUrl];

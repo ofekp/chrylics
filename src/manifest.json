@@ -3,7 +3,7 @@
 
   "name": "Chrylics",
   "description": "This extension shows the lyrics for the currently played song in YouTube/TuneIn Radio",
-  "version": "1.4",
+  "version": "1.5.1",
   
   "icons": { 
     "16": "icon16.png",
@@ -19,6 +19,7 @@
 
   "permissions": [
 	"http://www.azlyrics.com/",
+	"https://www.azlyrics.com/",
     "activeTab",
 	"tabs",
 	"storage",
